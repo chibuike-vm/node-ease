@@ -2,11 +2,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct UFWDATA 
+struct UFWDATA
 {
-	char firstData[50];	
+	char firstData[50];
 	char secondData[50];
 };
+
+void ufw_config(void)
+{
+	system("sudo ufw allow 22");
+	system("sudo ufw allow 1789");
+	system("sudo ufw allow 1790");
+	system("sudo ufw allow 8000");
+	system("sudo ufw allow 80");
+	system("sudo ufw allow 443/tcp");
+}
 
 int main(void)
 {
@@ -14,11 +24,11 @@ int main(void)
 	int ssRet;
 	char counter = 1, buffer[100];
 
-	FILE *file = fopen("logfile.txt", "w+");
-	
-	system("sudo ufw status > logfile.txt");
+	FILE *file = fopen("logfile", "w+");
 
-	while (fgets(buffer, 100, file) != NULL)
+	system("sudo ufw status > logfile");
+
+	while (fgets(buffer, 100, file))
 	{
 		ssRet = sscanf(buffer, "%s %s", ufwData.firstData, ufwData.secondData);
 
@@ -26,17 +36,18 @@ int main(void)
 		{
 			exit(1);
 		}
+
+		break;
 	}
-	
+
 	if (strcmp(ufwData.secondData, "inactive") == 0)
 	{
 		system("sudo ufw enable");
-		system("sudo ufw allow 22");
-		system("sudo ufw allow 1789");
-		system("sudo ufw allow 1790");
-		system("sudo ufw allow 8000");
-		system("sudo ufw allow 80");
-		system("sudo ufw allow 443/tcp");
+		ufw_config();
+	}
+	else if (strcmp(ufwData.secondData, "active") == 0)
+	{
+		ufw_config();
 	}
 
 	return(0);
