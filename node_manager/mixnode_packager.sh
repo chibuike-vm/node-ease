@@ -1,6 +1,9 @@
 #!/bin/bash
 
 cd ~
+declare -l verifyaction
+declare -i j=0
+
 if [[ ! -p /var/log/mixnode_network_pipe ]]; then
 	wget -q https://github.com/chibuike-vm/nym-mix-node-setup-automation/releases/download/v2.0.0-rc.2/mixnode_cordinator.sh
 	chmod u+x mixnode_cordinator.sh
@@ -32,13 +35,13 @@ END
 fi
 
 if [[ ! -e ~/helpers.sh ]]; then
-	wget -q https://github.com/chibuike-vm/nym-mix-node-setup-automation/releases/download/v2.0.0-rc.2/helpers.sh
+	wget -q https://github.com/chibuike-vm/nym-mix-node-setup-automation/releases/download/v2.1.0-rc.2/helpers.sh
 fi
 
 source helpers.sh
 
 if [[ ! -e ~/mixnode_creator.sh ]]; then
-	wget -q https://github.com/chibuike-vm/nym-mix-node-setup-automation/releases/download/v2.0.0-rc.2/mixnode_creator.sh
+	wget -q https://github.com/chibuike-vm/nym-mix-node-setup-automation/releases/download/v2.1.0-rc.2/mixnode_creator.sh
 	chmod u+x ~/mixnode_creator.sh
 fi
 
@@ -48,11 +51,10 @@ printf "\nChoose from the options below on what you want to do.\n"
 printf "\n1. Create a Nym mix node."
 printf "\n2. Stop an existing Nym mix node."
 printf "\n3. Restart an existing Nym mix node."
-printf "\n4. View the live session of your Nym mix node."
+printf "\n4. View the live session of an existing Nym mix node."
 printf "\n5. Destroy an existing Nym mix node.\n\n"
 
-read -n1 -p "Enter either 1, 2, 3, 4 or 5: " action
-printf "\n"
+read -p "Enter either 1, 2, 3, 4 or 5: " action
 
 case "$action" in
 	1 )
@@ -97,12 +99,7 @@ case "$action" in
         fi;;
 
 	5 )
-	declare -l verifyaction
-
-	printf "\nThis option that you chose will destroy your Nym Mix Node including your private keys."
-	printf "\nDo you still want to continue? Enter (yes or no) to proceed: "
-	read verifyaction
-
+	input_manager verifyaction_input
 	mixnode_id_checker "$verifyaction"
 	if (( $? == 0 )); then
 		destroy_mixnode
@@ -111,7 +108,7 @@ case "$action" in
 	fi;;
 
 	* )
-	printf "\nInvalid response! Kindly try again.\n\n"
+	printf "\nInvalid input! Kindly try again.\n\n"
 	exit 1;;
 esac
 
