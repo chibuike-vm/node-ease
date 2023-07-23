@@ -29,7 +29,7 @@ setup_node_manager()
 {
 	if [[ ! -d ~/node_manager ]]; then
 		mkdir ~/node_manager
-	fi 
+	fi
 
 	cd ~/node_manager
 
@@ -101,14 +101,155 @@ destroy_mixnode_ipc()
 	fi
 }
 
+nodeid_input()
+{
+	printf "\nEnter the Nym mix node ID you wish to use: "
+	read nodeid
+
+	j=j+1
+
+	if [[ ! $nodeid ]]; then
+		if (( j < 4 )); then
+			printf "\nInvalid input! Kindly try again..."
+			nodeid_input
+		elif (( j == 4 )); then
+			input_status=$(echo failed)
+		fi
+	fi
+}
+
+waddress_input()
+{
+	printf "\nEnter the Nym wallet address you intend to bond your node with: "
+	read waddress
+
+	j=j+1
+
+	if [[ ! $waddress =~ ^n1*[a-z0-9] ]] && [[ ${#waddress} != 40 ]]; then
+		if (( j < 4 )); then
+			printf "\nInvalid input! Kindly try again..."
+			waddress_input
+		elif (( j == 4 )); then
+			input_status=$(echo failed)
+		fi
+	elif [[ $waddress =~ ^n1*[a-z0-9] ]] && [[ ${#waddress} != 40 ]]; then
+		if (( j < 4 )); then
+			printf "\nInvalid input! Kindly try again..."
+			waddress_input
+		elif (( j == 4 )); then
+			input_status=$(echo failed)
+		fi
+	fi
+}
+
+vps_input()
+{
+	printf "\nChoosing from the options provided in the parenthesis (aws, google cloud, others)"
+	printf "\nkindly enter the VPS you are currently using to set up this mix node: "
+	read vps
+
+	j=j+1
+
+	if [[ $vps != "aws" && $vps != "google cloud" && $vps != "others" ]]; then
+		if (( j < 4 )); then
+			printf "\nInvalid input! Kindly try again..."
+			vps_input
+		elif (( j == 4 )); then
+			input_status=$(echo failed)
+		fi
+	fi
+
+}
+
+ip_address_input()
+{
+	if [[ $vps == "aws" || $vps == "google cloud" ]]; then
+		declare -l ip_check
+
+		printf "\nKindly enter your server's Private IPv4 address: "
+		read ipprivate
+
+		printf "\nKindly enter your server's Public IPv4 address: "
+		read ippublic
+
+		j=j+1
+
+ 		(ping -c1 $ipprivate; echo $?) > ~/caticat 2>&1
+		ip_check=$(sed -n '$p' caticat)
+
+		if [[ $ip_check != 0 ]]; then
+			if (( j < 4 )); then
+				printf "\nInvalid public or private IPv4 address input! Kindly try again..."
+				ip_address_input
+			elif (( j == 4 )); then
+				input_status=$(echo failed)
+			fi
+		fi
+	fi
+}
+
+nodedescribe_input()
+{
+	printf "\nWould you like to describe your Nym mix node? Enter (yes or no) to proceed: "
+	read nodedescribe
+
+	j=j+1
+
+	if [[ ! $nodedescribe || $nodedescribe != "yes" && $nodedescribe != "no" ]]; then
+		if (( j < 4 )); then
+			printf "\nInvalid input! Kindly try again..."
+			nodedescribe_input
+		elif (( j == 4 )); then
+			input_status=$(echo failed)
+		fi
+	fi
+}
+
+response_input()
+{
+	printf "\nDo you want to see the live session of your Nym mix node? (yes or no): "
+	read response
+
+	j=j+1
+
+	if [[ ! $response || $response != "yes" && $response != "no" ]]; then
+		if (( j < 4 )); then
+			printf "\nInvalid input! Kindly try again..."
+			response_input
+		elif (( j == 4 )); then
+			input_status=$(echo failed)
+		fi
+	fi
+}
+
+verifyaction_input()
+{
+	printf "\nThis option that you chose will destroy your Nym Mix Node including your private keys."
+	printf "\nDo you still want to continue? Enter (yes or no) to proceed: "
+	read verifyaction
+
+	j=j+1
+
+	if [[ ! $verifyaction || $verifyaction != "yes" && $verifyaction != "no" ]]; then
+		if (( j < 4 )); then
+			printf "\nInvalid input! Kindly try again..."
+			verifyaction_input
+		elif (( j == 4 )); then
+			input_status=$(echo failed)
+		fi
+	fi
+}
+
 mixnode_id_checker()
 {
 	declare -l verifynodeid verifyaction
 	verifyaction="$1"
 
+	j=j+1
+
 	if [[ $verifyaction == "yes" ]]; then
-		printf "\nKindly enter your mix node ID to continue (for security, it won't show on the screen"
-		printf "\nbut type it anyway): "
+		printf "\nKindly enter your mix node ID to continue (for security reasons, it won't show on the"
+		printf "\nscreen but type it anyway): "
 		read -s verifynodeid
 
 		verifynodeid="${verifynodeid:-yr790pz8asw}"
@@ -116,21 +257,36 @@ mixnode_id_checker()
 		if grep -w "$verifynodeid" /etc/systemd/system/nym-mixnode.service >> ~/ipc_dir/logfile.txt 2>&1; then
 			return 0
 		else
-			printf "\n\nOps! Invalid Nym Mix Node ID!\nKindly provide the valid ID and try again.\n\n"
-			return 1
+			if (( j < 4 )); then
+				printf "\n\nOps! Invalid Nym Mix Node ID! Kindly try again..."
+				input_manager "mixnode_id_checker $verifyaction"
+			elif (( j == 4 )); then
+				input_status=$(echo failed)
+				printf "\n"
+			fi
 		fi
 	elif [[ $verifyaction == "no" ]]; then
 		printf "\nNym mix node destroy operation was successfully aborted!\n\n"
 		return 1
-	else
-		printf "\nInvalid response! Kindly try again.\n\n"
-		exit 1
 	fi
 }
 
-waddrvalidatorfeedback()
+input_manager()
 {
-	printf "\nOps! Invalid Nym wallet address!"
-	printf "\nKindly run the script again and provide the correct details as requested.\n\n"
-	exit 1
+	user_input="$1"
+	$user_input
+
+	if (( j == 4 )) && [[ $input_status == "failed" ]]; then
+		j=0
+		printf "\nKindly run the script again and then ensure to enter the correct details as requested."
+		printf "\nThank you.\n\n"
+		exit 1
+	fi
+
+	if [[ -e ~/caticat ]]; then
+		rm ~/caticat
+	fi
+
+	j=0
 }
+
