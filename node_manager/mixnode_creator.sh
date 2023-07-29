@@ -8,7 +8,11 @@ fi
 
 clear && cd ~
 declare -l nodeid waddress vps ipprivate ippublic response nodedescribe input_status response
-declare -i j=0
+
+declare -a error_msgs
+error_msgs[0]=""
+error_msgs[1]="\nInvalid input! Kindly try again..."
+error_msgs[2]="\nInvalid public or private IPv4 address input! Kindly try again..."
 
 printf "\n\nDear %s, Welcome to the Nym Mix Node Setup Automation Program, kindly provide
 the following details to automatically set up your prospective Nym mix node.\n" "$USER"
