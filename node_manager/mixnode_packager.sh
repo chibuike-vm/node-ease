@@ -1,8 +1,6 @@
 #!/bin/bash
 
 cd ~
-declare -l verifyaction
-declare -i j=0
 
 if [[ ! -p /var/log/mixnode_network_pipe ]]; then
 	wget -q https://github.com/chibuike-vm/nym-mix-node-setup-automation/releases/download/v2.0.0-rc.2/mixnode_cordinator.sh
@@ -69,27 +67,30 @@ case "$action" in
 
 	2 )
 	verifyaction=${verifyaction-yes}
-	mixnode_id_checker "$verifyaction"
+	input_manager "mixnode_id_checker $verifyaction"
+
 	if (( $? == 0 )); then
 		if sudo systemctl status nym-mixnode.service | grep -w "running" >> ~/ipc_dir/logfile.txt 2>&1; then
 			echo 'stop' > /var/log/mixnode_network_pipe
-			printf "\n\nNym mix node stop operation was successful!\n\n"
+			printf "\nNym mix node stop operation was successful!\n\n"
 		else
-			printf "\n\nSorry, your Nym mix node is already stopped.\n\n"
+			printf "\nSorry, your Nym mix node is already stopped.\n\n"
 		fi
 	fi;;
 
 	3 )
 	verifyaction=${verifyaction-yes}
-	mixnode_id_checker "$verifyaction"
+	input_manager "mixnode_id_checker $verifyaction"
+
 	if (( $? == 0 )); then
 		echo 'restart' > /var/log/mixnode_network_pipe
-		printf "\n\nNym mix node restart operation was successful!\n\n"
+		printf "\nNym mix node restart operation was successful!\n\n"
 	fi;;
 
         4 )
         verifyaction=${verifyaction-yes}
-        mixnode_id_checker "$verifyaction"
+        input_manager "mixnode_id_checker $verifyaction"
+
         if (( $? == 0 )); then
                 clear
                 printf "\nNB: To leave the live session of your Nym mix node and go back to your terminal prompt,\n"
@@ -100,11 +101,12 @@ case "$action" in
 
 	5 )
 	input_manager verifyaction_input
-	mixnode_id_checker "$verifyaction"
+	input_manager "mixnode_id_checker $verifyaction"
+
 	if (( $? == 0 )); then
 		destroy_mixnode
 		destroy_mixnode_ipc
-		printf "\n\nNym mix node destroy operation was successful!\n\n"
+		printf "\nNym mix node destroy operation was successful!\n\n"
 	fi;;
 
 	* )
